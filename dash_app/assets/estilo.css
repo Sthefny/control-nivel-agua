@@ -316,7 +316,7 @@ h3 .ico, .subtitulo .ico, .chip .ico, .btn .ico, .kpi-etiqueta .ico, .como-leer 
 
 .rejilla {display: grid; gap: 16px;}
 .rejilla > .tarjeta {margin-bottom: 0;}
-.rejilla-principal {grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr); margin-bottom: 16px;}
+.rejilla-principal {grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); margin-bottom: 16px;}
 .rejilla-tres {grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 16px;}
 .rejilla-dos {grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 16px;}
 .rejilla-dos-uno {grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr); margin-bottom: 16px; align-items: start;}
@@ -481,7 +481,14 @@ h3 .ico, .subtitulo .ico, .chip .ico, .btn .ico, .kpi-etiqueta .ico, .como-leer 
 .semaforo-caja[data-anim="2"] .sem-etq::after {content: "Alerta de inundación"; color: var(--estado-bad);}
 .tema-oscuro .semaforo-caja:has(.sem-z1) .sem-etq, .tema-oscuro .semaforo-caja[data-anim="1"] .sem-etq::after {color: var(--estado-warn);}
 
-.tanque-y-semaforo {display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px;}
+/* El tanque conserva su proporción: en tarjetas anchas se limita y se centra en vez de estirarse */
+.tanque-y-semaforo {display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px;
+                    max-width: 720px; margin-inline: auto;}
+@media (max-width: 560px) {
+    .tanque-y-semaforo {grid-template-columns: minmax(0, 1fr);}   /* celular: el semáforo va debajo */
+    /* Los márgenes de la figura son fijos en píxeles: en pantallas angostas el gráfico necesita más alto */
+    .tanque-y-semaforo .grafico-tanque {aspect-ratio: 0.95 !important;}
+}
 .tanque-y-semaforo .semaforo-caja {padding-right: 4px; max-width: 96px;}
 /* Modo fallo: parpadeo suave del agua y del borde del tanque mientras el semáforo está en alerta
    (animación del cuadro con data-anim, o zona final cuando está detenida). Con movimiento reducido

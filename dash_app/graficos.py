@@ -175,10 +175,14 @@ def _marcas_hasta(tope, max_marcas=7):
     return None
 
 
+PX_X, PX_H = 300, 340          # píxeles por unidad de X y por altura del tanque (proporción del dibujo)
+RELACION_TANQUE = 1.05         # ancho / alto del gráfico del tanque (incluye márgenes y controles); lo usa app.py
+
+
 def _en_ruta(puntos, s, H):
     """Puntos repartidos a lo largo de una tubería (polilínea); s = fracciones 0–1 del recorrido."""
     p = np.asarray(puntos, float)
-    seg = np.hypot(np.diff(p[:, 0]) * 300, np.diff(p[:, 1]) / H * 340)   # longitud aproximada en píxeles
+    seg = np.hypot(np.diff(p[:, 0]) * PX_X, np.diff(p[:, 1]) / H * PX_H)   # longitud aproximada en píxeles
     acum = np.concatenate([[0.0], np.cumsum(seg)])
     d = np.asarray(s, float) * acum[-1]
     return np.interp(d, acum, p[:, 0]), np.interp(d, acum, p[:, 1])
@@ -293,9 +297,9 @@ def fig_tanque(res, tk, altura=500, n_cuadros=90, fallo=False):
                  xanchor="right", font=dict(color=tk["consigna"], size=11)),
             dict(x=0.0, y=min(0.1 * H, max(float(h[i]), 0) * 0.5) + 0.05 * H, xref="x", yref="y",
                  text=f"<b>{h[i]:.2f} cm</b>", showarrow=False, font=dict(color="white", size=15)),
-            dict(x=0.5, y=1.1, xref="paper", yref="paper", showarrow=False,
+            dict(x=0.5, y=1, xref="paper", yref="paper", yanchor="bottom", yshift=48, showarrow=False,
                  text=f"<b>t = {t[i]:.1f} s</b>", font=dict(size=12, color=tk["titulo"])),
-            dict(x=0.5, y=1.04, xref="paper", yref="paper", showarrow=False,
+            dict(x=0.5, y=1, xref="paper", yref="paper", yanchor="bottom", yshift=28, showarrow=False,
                  text=(f"<span style='color:{tk['entrada']}'>▼ entra {q_l[i]:.1f}</span>   ·   "
                        f"<span style='color:{tk['control']}'>▲ drena {q_b[i]:.1f}</span>   cm³/s"),
                  font=dict(size=11, color=tk["texto"])),
@@ -307,11 +311,11 @@ def fig_tanque(res, tk, altura=500, n_cuadros=90, fallo=False):
 
     fijas = [dict(x=0.47, y=u, xref="x", yref="y", text=f"{u:g} cm", showarrow=False, xanchor="right",
                   yanchor="bottom", font=dict(size=10, color=COLOR_ZONA[k])) for k, u in ((1, u_am), (2, u_rojo))]
-    fijas += [dict(x=X_PE, y=1.205 * H, xref="x", yref="y", text="Bomba de entrada", showarrow=False,
+    fijas += [dict(x=X_PE, y=Y_ENT, xref="x", yref="y", yanchor="bottom", yshift=30, text="Bomba de entrada", showarrow=False,
                    font=dict(size=10, color=tk["entrada"])),
-              dict(x=X_SENS, y=1.215 * H, xref="x", yref="y", text="Sensor ultrasónico", showarrow=False,
+              dict(x=X_SENS, y=1.17 * H, xref="x", yref="y", yanchor="bottom", yshift=16, text="Sensor ultrasónico", showarrow=False,
                    font=dict(size=10, color=tk["texto"])),
-              dict(x=0.90, y=0.23 * H, xref="x", yref="y", text="Bomba de<br>drenaje", showarrow=False,
+              dict(x=0.90, y=Y_DREN, xref="x", yref="y", yanchor="bottom", yshift=30, text="Bomba de<br>drenaje", showarrow=False,
                    font=dict(size=10, color=tk["control"]))]
     formas = [dict(type="rect", x0=-0.5, x1=0.5, y0=y0, y1=y1, fillcolor=COLOR_ZONA[k], opacity=0.07,
                    line_width=0, layer="below")
@@ -366,10 +370,14 @@ def fig_tanque(res, tk, altura=500, n_cuadros=90, fallo=False):
     fig.update_layout(
         # zona del semáforo en cada cuadro: la lee assets/semaforo.js para encender el semáforo HTML
         meta={"zonas": zonas},
-        margin=dict(l=46, r=6, t=62, b=10), hovermode=False,
-        xaxis=dict(range=[-1.08, 1.05], visible=False, fixedrange=True),
-        yaxis=dict(range=[-0.07 * H, 1.24 * H], title="Nivel [cm]", fixedrange=True, showgrid=False,
-                   tickvals=_marcas_hasta(H)),   # sin números por encima del tanque (ahí van bomba y sensor)
+        margin=dict(l=46, r=6, t=84, b=10), hovermode=False,
+        # Tamaño: lo da el CSS (aspect-ratio del contenedor); el dibujo mantiene siempre su proporción
+        autosize=True, height=None,
+        xaxis=dict(range=[-1.08, 1.05], visible=False, fixedrange=True, constrain="domain"),
+        # 1 unidad de X ≈ PX_X píxeles y la altura H ≈ PX_H píxeles: el tanque nunca se estira ni se aplasta
+        yaxis=dict(range=[-0.07 * H, 1.32 * H], title="Nivel [cm]", fixedrange=True, showgrid=False,
+                   tickvals=_marcas_hasta(H),   # sin números por encima del tanque (ahí van bomba y sensor)
+                   scaleanchor="x", scaleratio=(PX_H / H) / PX_X, constrain="domain"),
         annotations=anotaciones(i0), shapes=formas,
         updatemenus=[dict(
             type="buttons", direction="left", x=0, y=-0.02, xanchor="left", yanchor="top",

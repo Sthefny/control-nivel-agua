@@ -140,10 +140,11 @@ def como_leer(texto):
     ])
 
 
-def grafico(fig, clase=""):
-    # Altura explícita: sin ella Dash ajusta el gráfico a la altura del contenedor
-    return dcc.Graph(figure=fig, config=gr.CONFIG, className=f"grafico {clase}".strip(),
-                     style={"height": f"{fig.layout.height}px"})
+def grafico(fig, clase="", relacion=None):
+    # Altura explícita: sin ella Dash ajusta el gráfico a la altura del contenedor.
+    # Con `relacion` (ancho/alto) la altura sale del ancho disponible, así el dibujo conserva su proporción.
+    estilo = {"width": "100%", "aspectRatio": str(relacion)} if relacion else {"height": f"{fig.layout.height}px"}
+    return dcc.Graph(figure=fig, config=gr.CONFIG, className=f"grafico {clase}".strip(), style=estilo)
 
 
 def leyenda_semaforo(q):
@@ -691,7 +692,7 @@ def vista_resumen(res, x):
                     + ", franja de alerta, error y caudales de las dos bombas."),
             tarjeta("cylinder", "Tanque en movimiento", [
                 html.Div(className="tanque-y-semaforo", children=[
-                    grafico(gr.fig_tanque(res, tk, 520, fallo=fallo), "grafico-tanque"),
+                    grafico(gr.fig_tanque(res, tk, 520, fallo=fallo), "grafico-tanque", gr.RELACION_TANQUE),
                     semaforo(res["zona_final"], clave=_clave_simulacion(res)),
                 ])],
                 "Pulsa ▶: la bomba superior echa agua, la inferior falla y el semáforo sigue el nivel." if fallo
