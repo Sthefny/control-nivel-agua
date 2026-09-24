@@ -237,7 +237,8 @@ panel = html.Aside(className="panel", children=[
                         title="Cambiar tema claro / oscuro", **{"aria-label": "Cambiar tema claro u oscuro"}),
         ]),
     ]),
-    html.P("Ajusta los parámetros: la simulación se actualiza al instante.", className="panel-ayuda"),
+    html.P("Ajusta los parámetros: la simulación se actualiza al instante. ¿Primera vez? Abre la pestaña «Cómo usar».",
+           className="panel-ayuda"),
 
     grupo("triangle-alert", "Modo de simulación", [
         segmentado("modo", [("Normal", "normal"), ("Fallo del drenaje", "fallo")], "Qué simular",
@@ -340,7 +341,7 @@ panel = html.Aside(className="panel", children=[
 # (valor, etiqueta) — el icono de cada pestaña se pone por CSS (clase pestana-<valor>)
 PESTANAS = [("resumen", "Resumen"), ("respuesta", "Respuesta temporal"), ("reales", "Real vs. simulación"),
             ("comparar", "Comparar"), ("estabilidad", "Estabilidad"), ("frecuencia", "Frecuencia"),
-            ("modelo", "Modelo"), ("datos", "Datos")]
+            ("modelo", "Modelo"), ("datos", "Datos"), ("ayuda", "Cómo usar")]
 
 app.layout = html.Div(id="raiz", className="app", children=[
     dcc.Store(id="tema", storage_type="local", data="claro"),
@@ -521,7 +522,7 @@ def actualizar(*args):
     x["comp"] = dr.comparar(res, real) if real else None
     vistas = {"resumen": vista_resumen, "respuesta": vista_respuesta, "reales": vista_reales,
               "comparar": vista_comparar, "estabilidad": vista_estabilidad, "frecuencia": vista_frecuencia,
-              "modelo": vista_modelo, "datos": vista_datos}
+              "modelo": vista_modelo, "datos": vista_datos, "ayuda": vista_ayuda}
     return cabecera(q, res, x), vistas.get(pestana, vista_resumen)(res, x)
 
 
@@ -1022,6 +1023,97 @@ def vista_datos(res, x):
             tarjeta("ruler", "Estadísticas", [tabla(
                 est.to_dict("records"), [{"name": c, "id": c} for c in est.columns], x["tema"])]),
         ]),
+    ])
+
+
+def paso(icono, titulo, texto):
+    """Recuadro corto de la guía «Cómo usar»."""
+    return html.Div(className="paso", children=[html.B([ico(icono), titulo]), texto])
+
+
+def vista_ayuda(res, x):
+    """Guía para quien abre la página por primera vez (no depende de la simulación, salvo los umbrales)."""
+    q = res["q"]
+    nombre = lambda k: html.B([punto_zona(k), NOMBRE_ZONA[k]], className="zona-en-texto")
+    return html.Div([
+        aviso("info", [html.B("Bienvenida. "), "Esta página simula un tanque de agua con dos bombas para prevenir "
+                       "inundaciones. La bomba de arriba echa agua (como la lluvia) y la de abajo la saca. "
+                       "Un controlador decide cuánto drena para mantener el nivel bajo. "
+                       "Todo se recalcula solo cada vez que cambias un valor."], "lightbulb"),
+        tarjeta("route", "Empieza en 4 pasos", [html.Div(className="pasos", children=[
+            paso("layout-dashboard", "1. Mira el Resumen",
+                 "Está en la primera pestaña. Arriba ves si hay riesgo de inundación, y debajo las curvas y el tanque."),
+            paso("cylinder", "2. Pulsa ▶ en el tanque",
+                 "En la tarjeta «Tanque en movimiento» la animación muestra cómo entra y sale el agua, y el "
+                 "semáforo cambia de luz según el nivel. Con ❚❚ pausas y con el deslizador avanzas a mano."),
+            paso("sliders-horizontal", "3. Cambia parámetros",
+                 "En el panel (por defecto a la derecha) mueve los deslizadores: más lluvia, otro controlador, "
+                 "otro nivel objetivo. Los resultados se actualizan al instante."),
+            paso("triangle-alert", "4. Prueba un fallo",
+                 "En «Modo de simulación» elige «Fallo del drenaje» y mira qué pasa cuando la bomba de abajo se detiene."),
+        ])]),
+        tarjeta("siren", "El semáforo", [
+            html.P("Indica qué tan cerca está el nivel de desbordar el tanque:"),
+            html.Ul([
+                html.Li([nombre(0), f": el nivel está por debajo de {q['u-am']:g} cm."]),
+                html.Li([nombre(1), f": el nivel llegó a {q['u-am']:g} cm o más. Conviene vigilar."]),
+                html.Li([nombre(2), f": el nivel llegó a {q['u-rojo']:g} cm o más. Hay riesgo de desborde."]),
+            ]),
+            html.P("Los umbrales se pueden cambiar en el grupo «Semáforo de alerta» del panel."),
+        ]),
+        tarjeta("triangle-alert", "Simular un fallo del drenaje", [
+            html.P(["En «Modo de simulación» elige ", html.B("Fallo del drenaje"), ". A partir del instante que indiques, "
+                    "la bomba de abajo se detiene y la de arriba sigue echando agua, así que el nivel sube. "
+                    "Hay dos escenarios:"]),
+            html.Ul([
+                html.Li([html.B("Precaución: "), "alguien repara la bomba cuando el nivel llega al umbral amarillo y "
+                         "el controlador vuelve a bajar el agua."]),
+                html.Li([html.B("Alerta de inundación: "), "la bomba no se recupera y el agua sigue subiendo hasta el "
+                         "rojo. El tanque se tiñe de rojo y parpadea."]),
+            ]),
+            html.P(["Un aviso arriba te explica qué falló y cuándo. Con ", html.B("⏮ Reiniciar"),
+                    " vuelves la animación al inicio. Si el nivel no llega a la zona del escenario "
+                    "(por ejemplo, sin lluvia), sube el caudal de entrada o adelanta el instante del fallo."]),
+        ]),
+        tarjeta("sliders-horizontal", "Qué hay en el panel", [html.Div(className="pasos", children=[
+            paso("triangle-alert", "Modo de simulación", "Normal o con fallo del drenaje."),
+            paso("cloud-rain", "Entrada de agua",
+                 "Cuánta «lluvia» entra y qué tan variable es. «Nueva lluvia» genera otra al azar."),
+            paso("arrow-down-to-line", "Bomba de drenaje", "Caudal máximo, potencia permitida y qué tan rápido responde."),
+            paso("cylinder", "Tanque", "Tamaño del tanque y nivel con el que empieza."),
+            paso("sliders-horizontal", "Controlador",
+                 "Tipo (P, PI, PD, PID) y sus ganancias: cuánto reacciona a la diferencia con el objetivo."),
+            paso("target", "Nivel objetivo", "El nivel que el controlador intenta mantener (consigna)."),
+            paso("clock", "Simulación", "Cuántos segundos simular y con qué detalle."),
+            paso("git-compare", "Comparar sintonías",
+                 "Guarda una simulación para compararla con otras en la pestaña «Comparar»."),
+        ])]),
+        tarjeta("layout-dashboard", "Las pestañas", [html.Div(className="pasos", children=[
+            paso("layout-dashboard", "Resumen", "Lo esencial: riesgo, curvas, tanque animado y desempeño."),
+            paso("chart-line", "Respuesta temporal", "Nivel, error y caudales en detalle."),
+            paso("radio-tower", "Real vs. simulación", "Compara tus mediciones reales con la simulación."),
+            paso("git-compare", "Comparar", "Pone varias sintonías guardadas en una misma gráfica."),
+            paso("orbit", "Estabilidad", "Polos, ceros y lugar de raíces: si el sistema es estable."),
+            paso("audio-waveform", "Frecuencia", "Diagrama de Bode y márgenes de estabilidad."),
+            paso("sigma", "Modelo", "Las ecuaciones del tanque, la bomba y el controlador."),
+            paso("table-2", "Datos", "Tabla de resultados y botón para descargarlos en CSV."),
+        ])]),
+        tarjeta("radio-tower", "Usar tus mediciones reales (ESP32)", [
+            html.P(["En el grupo «Datos reales» del panel arrastra un archivo ", html.B("CSV"),
+                    " con al menos dos columnas: ", html.B("t"), " (tiempo en segundos) y ", html.B("h"),
+                    " (nivel en cm). Opcionalmente ", html.B("v"), " (señal de la bomba de drenaje en %). "
+                    "Acepta separador coma o punto y coma. Marca «Ver real y simulación juntos» para superponerlas."]),
+            html.P("¿Aún no tienes datos? Pulsa «Datos de ejemplo» para probar con mediciones sintéticas "
+                   "(no son reales) y ver cómo funciona la comparación."),
+        ]),
+        tarjeta("info", "Consejos", [html.Ul([
+            html.Li("Botón de la luna o el sol (arriba del panel): cambia entre tema claro y oscuro."),
+            html.Li("Botón de las flechas ⇄: mueve el panel a la izquierda o a la derecha."),
+            html.Li("Pasa el cursor sobre los iconos ⓘ del panel para ver una explicación de cada parámetro."),
+            html.Li("Los gráficos se pueden ampliar y recorrer con el ratón; doble clic los reinicia."),
+            html.Li("Si la página está publicada en internet, la primera visita después de un rato sin uso puede "
+                    "tardar cerca de un minuto en cargar. Es normal."),
+        ])]),
     ])
 
 
