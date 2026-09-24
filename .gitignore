@@ -1,0 +1,11 @@
+# Lo que no se sube al repositorio del Space
+.claude/
+.streamlit/
+app_control_tanque_v3*.py
+prompt_*.md
+*.bat
+__pycache__/
+*.pyc
+.venv/
+desktop.ini
+Thumbs.db

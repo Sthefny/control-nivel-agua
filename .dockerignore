@@ -1,0 +1,16 @@
+# Todo lo que NO va en la imagen (solo se copia dash_app/)
+.git
+.gitignore
+.claude/
+.streamlit/
+app_control_tanque_v3*.py
+prompt_*.md
+*.bat
+README.md
+Dockerfile
+.dockerignore
+__pycache__/
+*.pyc
+.venv/
+desktop.ini
+Thumbs.db

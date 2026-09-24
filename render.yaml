@@ -1,0 +1,13 @@
+# Configuración para Render (plan gratuito). La app vive en dash_app/.
+services:
+  - type: web
+    name: control-nivel-agua
+    runtime: python
+    plan: free
+    rootDir: dash_app
+    buildCommand: pip install -r requirements.txt
+    # 1 proceso: el plan gratis tiene solo 512 MB de RAM
+    startCommand: gunicorn app:server --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 120
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8

@@ -1,0 +1,689 @@
+/* ====================================================================
+   Control de Nivel · Prevención de inundaciones — estilos
+   Paleta: escala de azules de ingeniería (acero → marino).
+   El tema oscuro se activa con .tema-oscuro y el panel a la izquierda con
+   .panel-izquierda, ambos en #raiz.
+   ==================================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+/* ---------- Curvas de animación y duraciones ---------- */
+:root {
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);        /* entradas y respuesta a la interacción */
+    --t-press: 140ms;                                  /* respuesta al presionar */
+    --t-tema: 220ms;                                   /* cambio claro ↔ oscuro sin salto brusco */
+
+    /* Escala de azules (compartida por ambos temas) */
+    --azul-950: #06101f;
+    --azul-900: #0a1b33;
+    --azul-800: #0f2a4d;
+    --azul-700: #123a6b;
+    --azul-600: #1a4f8f;
+    --azul-500: #1d5fa8;
+    --azul-400: #3d7fc4;
+    --azul-300: #6da3d9;
+    --azul-200: #a9c8ea;
+    --azul-100: #dce8f6;
+    --azul-50:  #eff5fb;
+
+    /* Estados (semáforo): reservados, siempre con su nombre al lado */
+    --estado-ok: #0ca30c;
+    --estado-warn: #fab219;
+    --estado-bad: #d03b3b;
+}
+
+/* ---------- Tokens del tema claro ---------- */
+.app {
+    --bg: #f2f6fb;
+    --panel: #ffffff;
+    --superficie: #ffffff;
+    --superficie-2: #f5f8fc;
+    --borde: #dbe4ef;
+    --texto: #0b1a2e;
+    --texto-2: #3d5170;
+    --tenue: #5f7390;
+    --muy-tenue: #9aabc0;
+    --acento: var(--azul-500);
+    --acento-fuerte: var(--azul-700);
+    --acento-suave: rgba(29, 95, 168, .09);
+    --sombra: 0 1px 2px rgba(11, 26, 46, .04), 0 6px 18px -10px rgba(11, 26, 46, .14);
+    --info-bg: var(--azul-50);
+    --info-borde: var(--azul-100);
+
+    /* Variables de los componentes de Dash 4 (sliders, inputs) */
+    --Dash-Fill-Interactive-Strong: var(--azul-500);
+    --Dash-Fill-Interactive-Weak: rgba(29, 95, 168, .12);
+    --Dash-Fill-Inverse-Strong: #ffffff;
+    --Dash-Text-Strong: #0b1a2e;
+    --Dash-Text-Primary: #0b1a2e;
+    --Dash-Text-Weak: #5f7390;
+    --Dash-Stroke-Strong: #c5d1df;
+    --Dash-Stroke-Weak: #dbe4ef;
+    --Dash-Fill-Disabled: #e3eaf3;
+    --Dash-Shading-Weak: rgba(11, 26, 46, .06);
+    --Dash-Shading-Strong: rgba(11, 26, 46, .15);
+    --Dash-Tooltip-Background-Color: #0b1a2e;
+    --Dash-Tooltip-Border-Color: #0b1a2e;
+}
+
+/* ---------- Tokens del tema oscuro (marino profundo) ---------- */
+.app.tema-oscuro {
+    --bg: #07101d;
+    --panel: #0a1526;
+    --superficie: #0e1b2f;
+    --superficie-2: #0c182a;
+    --borde: #1c2e48;
+    --texto: #e3ecf7;
+    --texto-2: #aebfd6;
+    --tenue: #7f93ae;
+    --muy-tenue: #53667f;
+    --acento: var(--azul-300);
+    --acento-fuerte: var(--azul-200);
+    --acento-suave: rgba(109, 163, 217, .13);
+    --sombra: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 22px -12px rgba(0, 0, 0, .7);
+    --info-bg: #0c1f38;
+    --info-borde: #1c3a60;
+
+    --Dash-Fill-Interactive-Strong: var(--azul-300);
+    --Dash-Fill-Interactive-Weak: rgba(109, 163, 217, .16);
+    --Dash-Fill-Inverse-Strong: #0c182a;
+    --Dash-Text-Strong: #e3ecf7;
+    --Dash-Text-Primary: #e3ecf7;
+    --Dash-Text-Weak: #7f93ae;
+    --Dash-Stroke-Strong: #2b4262;
+    --Dash-Stroke-Weak: #1c2e48;
+    --Dash-Fill-Disabled: #16263d;
+    --Dash-Shading-Weak: rgba(0, 0, 0, .25);
+    --Dash-Shading-Strong: rgba(0, 0, 0, .45);
+    --Dash-Tooltip-Background-Color: #e3ecf7;
+    --Dash-Tooltip-Border-Color: #e3ecf7;
+}
+
+/* ---------- Estructura: contenido + panel (derecha por defecto) ---------- */
+html, body {margin: 0; padding: 0;}
+body, .app, button, input {font-family: 'Inter', system-ui, -apple-system, sans-serif;}
+.app {
+    display: grid; grid-template-columns: minmax(0, 1fr) 340px; grid-template-areas: "principal panel";
+    min-height: 100vh; background: var(--bg); color: var(--texto);
+    transition: background-color var(--t-tema) ease, color var(--t-tema) ease;
+    -webkit-font-smoothing: antialiased;
+}
+.app.panel-izquierda {grid-template-columns: 340px minmax(0, 1fr); grid-template-areas: "panel principal";}
+.principal {grid-area: principal; padding: 22px 30px 32px; min-width: 0; box-sizing: border-box;
+            max-width: 1560px; width: 100%; justify-self: center;}
+
+.panel {
+    grid-area: panel; position: sticky; top: 0; height: 100vh; overflow-y: auto; box-sizing: border-box;
+    background: var(--panel); border-left: 1px solid var(--borde);
+    padding: 20px 18px 28px;
+    scrollbar-width: thin; scrollbar-color: var(--borde) transparent;
+}
+.panel-izquierda .panel {border-left: none; border-right: 1px solid var(--borde);}
+
+/* Las superficies acompañan el cambio de tema en vez de saltar de golpe */
+.panel, .grupo, .tarjeta, .kpi, .aviso, .como-leer, .pestanas, .entrada, .segmentado, .paso {
+    transition: background-color var(--t-tema) ease, border-color var(--t-tema) ease, color var(--t-tema) ease;
+}
+
+/* ---------- Iconos ---------- */
+h3 .ico, .subtitulo .ico, .chip .ico, .btn .ico, .kpi-etiqueta .ico, .como-leer summary .ico,
+.estado-conexion .ico, .paso b .ico {margin-right: .45em;}
+.aviso-guardado .ico {vertical-align: -0.15em;}
+
+/* ---------- Marca ---------- */
+.marca {display: flex; align-items: center; gap: 12px; margin-bottom: 6px;}
+.marca-logo {
+    width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center; font-size: 21px;
+    color: #fff; flex: none;
+    background: linear-gradient(135deg, var(--azul-700), var(--azul-400));
+    box-shadow: 0 6px 16px -6px rgba(18, 58, 107, .7), inset 0 1px 0 rgba(255, 255, 255, .25);
+}
+.marca-titulo {font-weight: 800; font-size: 1.02rem; letter-spacing: -.015em; line-height: 1.2;}
+.marca-sub {font-size: .74rem; color: var(--tenue); font-weight: 600;}
+.marca-acciones {margin-left: auto; display: flex; gap: 6px;}
+.btn-icono {
+    width: 34px; height: 34px; border-radius: 9px; cursor: pointer; font-size: 16px; display: grid; place-items: center;
+    border: 1px solid var(--borde); background: var(--superficie-2); color: var(--texto-2); padding: 0;
+    transition: transform var(--t-press) var(--ease-out), background-color var(--t-tema) ease,
+                border-color var(--t-tema) ease, color 150ms ease;
+}
+.panel-ayuda {font-size: .79rem; color: var(--tenue); margin: 10px 2px 14px; line-height: 1.45;}
+
+/* ---------- Grupos del panel ---------- */
+.grupo {
+    border: 1px solid var(--borde); border-radius: 14px; margin-bottom: 12px;
+    background: var(--superficie-2); overflow: hidden;
+}
+.grupo > summary {
+    list-style: none; cursor: pointer; display: flex; align-items: center; gap: 10px;
+    padding: 11px 14px; font-weight: 700; font-size: .91rem; user-select: none;
+    transition: background-color 150ms ease;
+}
+.grupo > summary::-webkit-details-marker {display: none;}
+.grupo > summary::after {
+    content: ""; margin-left: auto; width: 14px; height: 14px; background: var(--tenue);
+    -webkit-mask: var(--ico-chevron-right) center / contain no-repeat; mask: var(--ico-chevron-right) center / contain no-repeat;
+    transition: transform 200ms var(--ease-out);
+}
+.grupo[open] > summary::after {transform: rotate(90deg);}
+.grupo-ico {
+    width: 24px; height: 24px; border-radius: 7px; display: inline-grid; place-items: center;
+    font-size: 14px; color: var(--acento); background: var(--acento-suave);
+}
+.grupo-cuerpo {padding: 2px 14px 14px;}
+/* Al abrir un grupo, su contenido aparece desde arriba (de donde "sale") en vez de brotar de golpe */
+.grupo[open] > .grupo-cuerpo {
+    transition: opacity 200ms var(--ease-out), transform 200ms var(--ease-out);
+    @starting-style {opacity: 0; transform: translateY(-4px);}
+}
+
+.campo {margin-top: 12px;}
+.campo > label {
+    display: block; font-size: .77rem; font-weight: 600; color: var(--texto-2); margin-bottom: 6px;
+}
+.campo > label[title]:not([title=""])::after {content: " ⓘ"; color: var(--muy-tenue); font-size: .72rem;}
+/* Slider de Dash 4: su casilla numérica se oculta en contenedores < 300 px; la mostramos a la derecha */
+.campo .dash-slider-container {display: flex; align-items: center; gap: 10px;}
+.campo .dash-slider-wrapper {flex: 1 1 auto; order: 1; min-width: 0;}
+.campo .dash-slider-container .dash-range-slider-input {
+    display: block !important; order: 2; box-sizing: border-box; width: 64px !important;
+    min-width: 64px; max-width: 64px; height: 30px; padding: 0 6px; border-radius: 8px;
+    border: 1px solid var(--borde); background: var(--superficie); color: var(--texto);
+    font-weight: 700; font-size: .82rem; font-variant-numeric: tabular-nums;
+}
+.fila-doble {display: grid; grid-template-columns: 1fr 1fr; gap: 10px;}
+.fila-doble .campo {min-width: 0;}
+
+.entrada {
+    width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 9px; font-size: .88rem;
+    border: 1px solid var(--borde); background: var(--superficie); color: var(--texto);
+    outline: none; font-variant-numeric: tabular-nums;
+}
+.entrada:focus {border-color: var(--acento); box-shadow: 0 0 0 3px var(--acento-suave);}
+
+/* Control segmentado (RadioItems) */
+.segmentado {
+    display: flex; flex-wrap: wrap; gap: 3px; padding: 3px; border-radius: 10px;
+    background: var(--bg); border: 1px solid var(--borde);
+}
+.segmentado label {
+    flex: 1 1 auto; margin: 0 !important; text-align: center; cursor: pointer;
+    padding: 6px 8px; border-radius: 7px; font-size: .8rem; font-weight: 600; color: var(--texto-2);
+    transition: background-color 150ms ease, color 150ms ease, transform var(--t-press) var(--ease-out);
+    white-space: nowrap;
+}
+.segmentado input {position: absolute; opacity: 0; pointer-events: none;}
+.segmentado label:has(input:checked) {
+    background: var(--superficie); color: var(--acento); box-shadow: 0 1px 3px var(--Dash-Shading-Strong);
+}
+.segmentado label:has(input:focus-visible) {outline: 2px solid var(--acento); outline-offset: 1px;}
+
+/* Botones */
+.btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 100%; margin-top: 10px; padding: 9px 12px; border-radius: 10px; cursor: pointer;
+    font-weight: 600; font-size: .83rem; border: 1px solid var(--borde);
+    background: var(--superficie); color: var(--texto);
+    transition: filter 150ms ease, transform var(--t-press) var(--ease-out);
+}
+.btn:disabled {opacity: .5; cursor: not-allowed;}
+.btn-primario {
+    background: linear-gradient(135deg, var(--azul-700), var(--azul-500)); color: #fff; border: none;
+    box-shadow: 0 6px 14px -8px rgba(18, 58, 107, .9), inset 0 1px 0 rgba(255, 255, 255, .15);
+}
+.btn-auto {width: auto;}
+.btn-derecha {width: auto; float: right; margin: -44px 0 10px;}
+/* Respuesta inmediata al presionar: el control "cede" un poco */
+.btn:active:not(:disabled), .btn-icono:active, .pestana:active, .segmentado label:active {transform: scale(0.97);}
+.aviso-guardado {font-size: .78rem; color: var(--tenue); margin-top: 8px; min-height: 1em;}
+
+/* ---------- Cabecera compacta con fondo tipo plano técnico ---------- */
+.cabecera {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 12px;
+    color: #fff; border-radius: 18px; padding: 16px 22px; margin-bottom: 16px; position: relative; overflow: hidden;
+    background:
+        linear-gradient(rgba(255, 255, 255, .06) 1px, transparent 1px) 0 0 / 24px 24px,
+        linear-gradient(90deg, rgba(255, 255, 255, .06) 1px, transparent 1px) 0 0 / 24px 24px,
+        linear-gradient(118deg, var(--azul-900) 0%, var(--azul-700) 58%, var(--azul-500) 100%);
+    box-shadow: 0 14px 30px -18px rgba(10, 27, 51, .8), inset 0 1px 0 rgba(255, 255, 255, .08);
+}
+.cabecera-antetitulo {font-size: .68rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+                      color: var(--azul-200);}
+.cabecera h1 {margin: 3px 0 0; font-size: 1.45rem; font-weight: 800; letter-spacing: -.025em; line-height: 1.1;}
+.chips {display: flex; flex-wrap: wrap; gap: 7px;}
+.chip {
+    display: inline-flex; align-items: center; font-size: .76rem; font-weight: 600; padding: 5px 11px;
+    border-radius: 999px; background: rgba(255, 255, 255, .10); border: 1px solid rgba(255, 255, 255, .18);
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); white-space: nowrap;
+}
+.chip .punto {margin-right: .5em;}
+.chip-ok {border-color: rgba(12, 163, 12, .55); background: rgba(12, 163, 12, .16);}
+.chip-warn {border-color: rgba(250, 178, 25, .65); background: rgba(250, 178, 25, .16);}
+.chip-bad {border-color: rgba(208, 59, 59, .7); background: rgba(208, 59, 59, .22);}
+
+/* ---------- Pestañas: barra flotante translúcida, con icono por pestaña ---------- */
+.pestanas-contenedor {margin-bottom: 16px; position: sticky; top: 10px; z-index: 20;}
+.pestanas {
+    display: flex !important; flex-wrap: wrap; gap: 3px; padding: 5px !important;
+    background: color-mix(in srgb, var(--superficie) 74%, transparent) !important;
+    -webkit-backdrop-filter: blur(16px) saturate(170%); backdrop-filter: blur(16px) saturate(170%);
+    border: 1px solid var(--borde) !important;
+    border-radius: 14px; width: fit-content; max-width: 100%;
+    box-shadow: 0 8px 24px -14px rgba(11, 26, 46, .35);
+}
+.pestana {
+    display: inline-flex !important; align-items: center; gap: 7px;
+    border: none !important; background: transparent !important; color: var(--texto-2) !important;
+    padding: 8px 14px !important; border-radius: 10px !important; font-weight: 600 !important;
+    font-size: .86rem !important; width: auto !important; flex: 0 0 auto !important; cursor: pointer;
+    transition: background-color 150ms ease, color 150ms ease, transform var(--t-press) var(--ease-out);
+}
+.pestana::before {
+    content: ""; width: 15px; height: 15px; flex: none; background: currentColor;
+    -webkit-mask: var(--i) center / contain no-repeat; mask: var(--i) center / contain no-repeat;
+}
+.pestana-resumen {--i: var(--ico-layout-dashboard);}
+.pestana-respuesta {--i: var(--ico-chart-line);}
+.pestana-comparar {--i: var(--ico-git-compare);}
+.pestana-estabilidad {--i: var(--ico-orbit);}
+.pestana-frecuencia {--i: var(--ico-audio-waveform);}
+.pestana-modelo {--i: var(--ico-sigma);}
+.pestana-datos {--i: var(--ico-table-2);}
+.pestana-reales {--i: var(--ico-radio-tower);}
+.pestana--selected, .pestana-activa {
+    background: var(--acento-suave) !important; color: var(--acento) !important;
+    box-shadow: inset 0 0 0 1px var(--acento-suave) !important;
+}
+
+/* ---------- Tarjetas, rejillas y KPIs ---------- */
+.contenido {min-height: 400px;}
+/* Al cambiar de pestaña el contenido nuevo aparece con un fundido corto (sin desplazamiento:
+   se cambia de pestaña muchas veces y el movimiento cansaría) */
+.contenido > div {
+    transition: opacity 160ms ease;
+    @starting-style {opacity: 0;}
+}
+.tarjeta {
+    background: var(--superficie); border: 1px solid var(--borde); border-radius: 16px;
+    padding: 16px 18px; box-shadow: var(--sombra); min-width: 0; margin-bottom: 16px;
+}
+.tarjeta-cabecera h3 {margin: 0; font-size: .98rem; font-weight: 700; letter-spacing: -.01em;
+                      display: flex; align-items: center;}
+.tarjeta-cabecera h3 .ico {color: var(--acento);}
+.tarjeta-cabecera p {margin: 4px 0 0; font-size: .81rem; color: var(--tenue); line-height: 1.45;}
+.tarjeta-cabecera {margin-bottom: 6px;}
+.tarjeta.centrada {text-align: center;}
+.tarjeta.centrada h3 {justify-content: center;}
+
+.rejilla {display: grid; gap: 16px;}
+.rejilla > .tarjeta {margin-bottom: 0;}
+.rejilla-principal {grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr); margin-bottom: 16px;}
+.rejilla-tres {grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 16px;}
+.rejilla-dos {grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 16px;}
+.rejilla-dos-uno {grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr); margin-bottom: 16px; align-items: start;}
+.rejilla-dos-uno > div > .tarjeta:last-child {margin-bottom: 0;}
+.rejilla-cuatro {grid-template-columns: repeat(4, minmax(0, 1fr));}
+.rejilla-reales {grid-template-columns: 200px minmax(0, 1fr); margin-bottom: 16px;}
+
+.kpis {display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-bottom: 16px;}
+.kpis-2 {grid-template-columns: repeat(2, minmax(0, 1fr));}
+.kpis-1 {grid-template-columns: 1fr;}
+.tarjeta .kpis {margin-bottom: 4px;}
+.kpi {
+    position: relative; overflow: hidden; background: var(--superficie); border: 1px solid var(--borde);
+    border-radius: 14px; padding: 13px 15px 13px 18px; box-shadow: var(--sombra);
+}
+.kpi::before {content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--muy-tenue);}
+.kpi-ok::before {background: var(--estado-ok);}
+.kpi-warn::before {background: var(--estado-warn);}
+.kpi-bad::before {background: var(--estado-bad);}
+.kpi-info::before {background: var(--azul-400);}
+.kpi-vacio {border-style: dashed; box-shadow: none; background: var(--superficie-2);}
+.kpi-vacio .kpi-valor {color: var(--muy-tenue);}
+.kpi-etiqueta {
+    display: flex; align-items: center; font-size: .69rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .06em; color: var(--tenue);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.kpi-etiqueta .ico {font-size: 13px; color: var(--acento);}
+.kpi-valor {font-size: 1.42rem; font-weight: 800; letter-spacing: -.02em; margin-top: 6px; line-height: 1.15;}
+.kpi-num {font-variant-numeric: tabular-nums;}
+.kpi-unidad {font-size: .8rem; font-weight: 600; color: var(--tenue); margin-left: 3px; letter-spacing: 0;}
+.kpi-sub {font-size: .74rem; color: var(--tenue); margin-top: 3px;}
+/* Números animados (assets/numeros.js): se muestra el span animado y se oculta el real,
+   que sigue en el DOM para lectores de pantalla. Sin JavaScript se ve el real. */
+.kpi-anim {display: none;}
+.js-numeros .kpi-anim {display: inline;}
+.js-numeros .kpi-real {position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%);
+                       white-space: nowrap;}
+
+.subtitulo {font-size: 1.02rem; margin: 6px 0 10px; display: flex; align-items: center;}
+.subtitulo .ico {color: var(--acento);}
+
+/* ---------- Semáforo: puntos de color (siempre junto al nombre de la zona) ---------- */
+.punto {width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex: none; vertical-align: 0.05em;}
+.punto-ok {background: var(--estado-ok); box-shadow: 0 0 0 2px rgba(12, 163, 12, .18);}
+.punto-warn {background: var(--estado-warn); box-shadow: 0 0 0 2px rgba(250, 178, 25, .22);}
+.punto-bad {background: var(--estado-bad); box-shadow: 0 0 0 2px rgba(208, 59, 59, .2);}
+.zona-en-texto .punto {margin: 0 .35em 0 .15em;}
+
+/* ---------- Avisos ---------- */
+.aviso {
+    display: flex; gap: 14px; align-items: center; padding: 12px 16px; border-radius: 14px;
+    background: var(--superficie); border: 1px solid var(--borde); border-left-width: 4px;
+    margin-bottom: 16px; font-size: .91rem; line-height: 1.5; box-shadow: var(--sombra);
+}
+.aviso-icono {font-size: 1.3rem; line-height: 1; display: grid; place-items: center;}
+.aviso-ok {border-left-color: var(--estado-ok);}
+.aviso-ok .aviso-icono {color: var(--estado-ok);}
+.aviso-warn {border-left-color: var(--estado-warn);}
+.aviso-warn .aviso-icono {color: #c98500;}
+.aviso-bad {border-left-color: var(--estado-bad);}
+.aviso-bad .aviso-icono {color: var(--estado-bad);}
+.aviso-info {border-left-color: var(--acento); background: var(--info-bg); border-color: var(--info-borde);}
+.aviso-info .aviso-icono {color: var(--acento);}
+.tema-oscuro .aviso-warn .aviso-icono {color: var(--estado-warn);}
+
+/* ---------- Explicaciones plegables ---------- */
+.como-leer {
+    background: var(--superficie); border: 1px solid var(--borde); border-radius: 14px;
+    padding: 0 16px; margin-bottom: 16px; font-size: .9rem;
+}
+.como-leer > summary {cursor: pointer; padding: 11px 0; font-weight: 600; color: var(--texto-2);
+                      display: flex; align-items: center; list-style: none;}
+.como-leer > summary::-webkit-details-marker {display: none;}
+.como-leer > summary .ico {color: var(--estado-warn);}
+.como-leer[open] > summary {border-bottom: 1px solid var(--borde);}
+.como-leer ul {margin: 10px 0 12px; padding-left: 20px; color: var(--texto-2); line-height: 1.6;}
+.como-leer strong {color: var(--texto);}
+
+/* ---------- Leyenda del semáforo ---------- */
+.leyenda-semaforo {display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 4px;}
+.leyenda-item {
+    display: inline-flex; align-items: center; gap: 7px; font-size: .77rem; font-weight: 600;
+    padding: 4px 11px; border-radius: 999px; background: var(--superficie-2);
+    border: 1px solid var(--borde); color: var(--texto-2);
+}
+
+/* ---------- Tabla resumen ---------- */
+.desplazable {max-height: 330px; overflow-y: auto; scrollbar-width: thin;}
+.tabla-resumen {width: 100%; border-collapse: collapse; font-size: .85rem;}
+.tabla-resumen td {padding: 7px 8px; border-bottom: 1px solid var(--borde); color: var(--texto-2);}
+.tabla-resumen td .punto {margin-right: .55em;}
+.tabla-resumen td:last-child {text-align: right; font-weight: 700; color: var(--texto); font-variant-numeric: tabular-nums;}
+.tabla-resumen .grp td {
+    background: var(--superficie-2); font-size: .67rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .07em; color: var(--tenue); text-align: left;
+}
+.insignia {display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: .74rem; font-weight: 700;}
+.insignia-ok {background: rgba(12, 163, 12, .13); color: #087a08;}
+.insignia-warn {background: rgba(250, 178, 25, .18); color: #9a6400;}
+.insignia-bad {background: rgba(208, 59, 59, .13); color: #b12f2f;}
+.insignia-info {background: var(--acento-suave); color: var(--acento);}
+.tema-oscuro .insignia-ok {color: #4bd14b;}
+.tema-oscuro .insignia-warn {color: #fbc55a;}
+.tema-oscuro .insignia-bad {color: #ee7878;}
+
+/* ---------- Tablas de datos (DataTable) ---------- */
+.dash-table-container .previous-next-container, .dash-table-container .page-number {color: var(--texto-2);}
+.dash-table-container .previous-next-container button {
+    background: var(--superficie-2); color: var(--texto); border: 1px solid var(--borde); border-radius: 6px;
+}
+.dash-table-container .current-page {background: var(--superficie) !important; color: var(--texto) !important;}
+.dash-spreadsheet-container .dash-spreadsheet-inner th .column-header--sort {color: var(--tenue);}
+
+/* ---------- Modelo: fórmulas ---------- */
+.formula {overflow-x: auto; color: var(--texto);}
+.formula mjx-container {font-size: 118% !important;}
+.nota {font-size: .8rem; color: var(--tenue); margin: 8px 0 0;}
+
+/* ---------- Datos reales ---------- */
+.estado-conexion {
+    display: inline-flex; align-items: center; gap: 9px; padding: 7px 16px; border-radius: 999px;
+    font-weight: 600; font-size: .86rem; margin-bottom: 14px;
+    background: rgba(208, 59, 59, .10); color: var(--estado-bad); border: 1px solid rgba(208, 59, 59, .3);
+}
+.estado-conexion .ico {margin-right: 0;}
+.punto-pulso {width: 8px; height: 8px; border-radius: 50%; background: var(--estado-bad); animation: pulso 1.6s infinite;}
+@keyframes pulso {
+    0% {box-shadow: 0 0 0 0 rgba(208, 59, 59, .5);}
+    70% {box-shadow: 0 0 0 9px rgba(208, 59, 59, 0);}
+    100% {box-shadow: 0 0 0 0 rgba(208, 59, 59, 0);}
+}
+/* ---------- Semáforo físico (Resumen y Real vs. simulación) ---------- */
+.semaforo-caja {display: flex; flex-direction: column; align-items: center; gap: 10px;}
+.semaforo-fisico {
+    display: inline-flex; flex-direction: column; gap: 12px; padding: 16px 14px; margin-top: 8px;
+    background: linear-gradient(180deg, #1c2433, #121823); border-radius: 22px;
+    box-shadow: inset 0 0 0 3px #0c1017, inset 0 1px 0 rgba(255, 255, 255, .08), 0 12px 26px -14px rgba(0, 0, 0, .7);
+}
+.luz {width: 40px; height: 40px; border-radius: 50%; background: #2b3446; display: block;
+      box-shadow: inset 0 3px 7px rgba(0, 0, 0, .55);
+      transition: background-color 180ms ease, box-shadow 180ms ease;}
+/* Luz encendida: zona final (clase sem-zN, la pone el servidor) o cuadro animado (data-anim, la pone
+   assets/semaforo.js). Mientras hay data-anim, manda la animación. */
+.sem-z2 .luz-roja, .semaforo-caja[data-anim="2"] .luz-roja,
+.sem-z1 .luz-amarilla, .semaforo-caja[data-anim="1"] .luz-amarilla,
+.sem-z0 .luz-verde, .semaforo-caja[data-anim="0"] .luz-verde {background: var(--luz); box-shadow: 0 0 22px 4px var(--brillo), inset 0 -4px 8px rgba(0, 0, 0, .25), inset 0 3px 6px rgba(255, 255, 255, .45);}
+.semaforo-caja[data-anim] .luz {background: #2b3446; box-shadow: inset 0 3px 7px rgba(0, 0, 0, .55);}
+.semaforo-caja[data-anim="2"] .luz-roja, .semaforo-caja[data-anim="1"] .luz-amarilla,
+.semaforo-caja[data-anim="0"] .luz-verde {background: var(--luz); box-shadow: 0 0 22px 4px var(--brillo), inset 0 -4px 8px rgba(0, 0, 0, .25), inset 0 3px 6px rgba(255, 255, 255, .45);}
+.luz-roja {--luz: #e04848; --brillo: rgba(224, 72, 72, .55);}
+.luz-amarilla {--luz: #fab219; --brillo: rgba(250, 178, 25, .55);}
+.luz-verde {--luz: #19b319; --brillo: rgba(25, 179, 25, .5);}
+.sem-etq {font-size: .82rem; font-weight: 800; letter-spacing: .02em; text-align: center; min-height: 1.2em;}
+.semaforo-caja:has(.sem-z0) .sem-etq {color: var(--estado-ok);}
+.semaforo-caja:has(.sem-z1) .sem-etq {color: #c98500;}
+.semaforo-caja:has(.sem-z2) .sem-etq {color: var(--estado-bad);}
+/* Durante la animación el texto sigue a la luz encendida */
+.semaforo-caja[data-anim] .sem-etq-real {display: none;}
+.semaforo-caja[data-anim="0"] .sem-etq::after {content: "Normal"; color: var(--estado-ok);}
+.semaforo-caja[data-anim="1"] .sem-etq::after {content: "Precaución"; color: #c98500;}
+.semaforo-caja[data-anim="2"] .sem-etq::after {content: "Alerta de inundación"; color: var(--estado-bad);}
+.tema-oscuro .semaforo-caja:has(.sem-z1) .sem-etq, .tema-oscuro .semaforo-caja[data-anim="1"] .sem-etq::after {color: var(--estado-warn);}
+
+.tanque-y-semaforo {display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px;}
+.tanque-y-semaforo .semaforo-caja {padding-right: 4px; max-width: 96px;}
+/* Modo fallo: parpadeo suave del agua y del borde del tanque mientras el semáforo está en alerta
+   (animación del cuadro con data-anim, o zona final cuando está detenida). Con movimiento reducido
+   solo queda el color. */
+@keyframes parpadeo-alerta {0%, 100% {opacity: 1;} 50% {opacity: .45;}}
+@media (prefers-reduced-motion: no-preference) {
+    .tanque-y-semaforo:has(.semaforo-caja[data-anim="2"], .semaforo-caja:not([data-anim]) .sem-z2) .tracetintagua,
+    .tanque-y-semaforo:has(.semaforo-caja[data-anim="2"], .semaforo-caja:not([data-anim]) .sem-z2) .tracetintborde {
+        animation: parpadeo-alerta 1.4s ease-in-out infinite;
+    }
+}
+.columna-semaforos {display: grid; gap: 16px;}
+.columna-semaforos .tarjeta {margin-bottom: 0;}
+.pasos {display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));}
+.paso {
+    background: var(--superficie); border: 1px solid var(--borde); border-radius: 14px; padding: 13px 15px;
+    font-size: .85rem; color: var(--texto-2); box-shadow: var(--sombra); line-height: 1.5;
+}
+.paso b {display: flex; align-items: center; color: var(--texto); margin-bottom: 3px;}
+.paso b .ico {color: var(--acento);}
+
+.pie {text-align: center; color: var(--muy-tenue); font-size: .77rem; margin-top: 10px;}
+
+/* ---------- Efectos de hover solo con mouse (en pantallas táctiles el tap los "pega") ---------- */
+@media (hover: hover) and (pointer: fine) {
+    .btn:hover:not(:disabled) {filter: brightness(.96);}
+    .btn-primario:hover:not(:disabled) {filter: brightness(1.08);}
+    .btn-icono:hover {background: var(--superficie); color: var(--acento);}
+    .segmentado label:hover {color: var(--texto);}
+    .pestana:hover {background: var(--superficie-2) !important; color: var(--texto) !important;}
+    .grupo > summary:hover {background: var(--acento-suave);}
+    .como-leer > summary:hover {color: var(--texto);}
+}
+
+/* ---------- Accesibilidad ---------- */
+/* Movimiento reducido: se conservan los fundidos de color y opacidad, se quita el desplazamiento */
+@media (prefers-reduced-motion: reduce) {
+    .grupo[open] > .grupo-cuerpo {@starting-style {transform: none;}}
+    .btn:active:not(:disabled), .btn-icono:active, .pestana:active, .segmentado label:active {transform: none;}
+    .grupo > summary::after {transition: none;}
+    .punto-pulso {animation: none;}
+}
+/* Transparencia reducida: superficies translúcidas pasan a sólidas */
+@media (prefers-reduced-transparency: reduce) {
+    .pestanas {background: var(--superficie) !important; backdrop-filter: none; -webkit-backdrop-filter: none;}
+    .chip {backdrop-filter: none; -webkit-backdrop-filter: none;}
+}
+/* Foco visible al navegar con teclado */
+.btn:focus-visible, .btn-icono:focus-visible, .pestana:focus-visible, .grupo > summary:focus-visible,
+.como-leer > summary:focus-visible {outline: 2px solid var(--acento); outline-offset: 2px;}
+
+/* ====================================================================
+   COMPONENTES NUEVOS: subida de CSV, interruptor, fila de semilla, ejemplo de código
+   ==================================================================== */
+.subida {
+    margin-top: 12px; border: 1.5px dashed var(--azul-300); border-radius: 12px; padding: 12px;
+    background: var(--acento-suave); color: var(--texto-2); font-size: .8rem; cursor: pointer; text-align: center;
+    transition: background-color 150ms ease, border-color 150ms ease;
+}
+.subida > div {display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;}
+.subida .ico {font-size: 18px; color: var(--acento);}
+.subida b {color: var(--texto);}
+.subida-grande {padding: 26px; font-size: .92rem; margin: 0 0 16px;}
+.subida-grande .ico {font-size: 26px;}
+
+/* dcc.Checklist como interruptor */
+.interruptor {margin-top: 12px;}
+.interruptor label {display: flex !important; align-items: center; gap: 10px; cursor: pointer; font-size: .82rem;
+                    font-weight: 600; color: var(--texto-2);}
+.interruptor input {
+    appearance: none; -webkit-appearance: none; margin: 0; width: 36px; height: 20px; border-radius: 999px; flex: none;
+    background: var(--muy-tenue); position: relative; cursor: pointer; transition: background-color 180ms ease;
+}
+.interruptor input::after {
+    content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%;
+    background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .3); transition: transform 200ms var(--ease-out);
+}
+.interruptor input:checked {background: var(--acento);}
+.interruptor input:checked::after {transform: translateX(16px);}
+.interruptor input:focus-visible {outline: 2px solid var(--acento); outline-offset: 2px;}
+
+.fila-semilla {display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: end;}
+.fila-semilla .btn {margin-top: 0; height: 36px; white-space: nowrap;}
+.codigo-ejemplo {background: var(--superficie-2); border: 1px solid var(--borde); border-radius: 10px;
+                 padding: 10px 14px; font-size: .82rem; color: var(--texto); margin: 6px 0;}
+.chip-real {border-color: rgba(235, 104, 52, .7); background: rgba(235, 104, 52, .2);}
+.rejilla-reales-datos {display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr) 240px; margin-bottom: 16px;
+                       align-items: start;}
+.rejilla-reales-datos > .tarjeta {margin-bottom: 0;}
+
+/* ====================================================================
+   TEMA CON MÁS COLOR: panel azul marino, fondo azulado, tarjetas con franja
+   de color y KPIs teñidos según su estado.
+   ==================================================================== */
+.app {
+    --bg: #e3ecf7;
+    --superficie-2: #f1f6fc;
+    --borde: #d2deed;
+    background:
+        radial-gradient(1200px 500px at 15% -10%, rgba(61, 127, 196, .20), transparent 60%),
+        radial-gradient(900px 500px at 100% 0%, rgba(26, 175, 122, .08), transparent 60%),
+        linear-gradient(180deg, #e7eff9 0%, #dde8f5 100%);
+    background-attachment: fixed;
+}
+.app.tema-oscuro {
+    background:
+        radial-gradient(1200px 500px at 15% -10%, rgba(61, 127, 196, .22), transparent 60%),
+        linear-gradient(180deg, #081322 0%, #060e1a 100%);
+    background-attachment: fixed;
+}
+
+/* Panel siempre azul marino (también en el tema claro): bloque de color que ordena la página */
+.panel {
+    --superficie: #15305a; --superficie-2: #112849; --borde: #24477a; --bg: #0c1f3b;
+    --texto: #eaf2fc; --texto-2: #c3d4ea; --tenue: #93abcb; --muy-tenue: #6883a8;
+    --acento: #8cc0f2; --acento-suave: rgba(140, 192, 242, .16);
+    --Dash-Fill-Interactive-Strong: #8cc0f2; --Dash-Fill-Interactive-Weak: rgba(140, 192, 242, .2);
+    --Dash-Fill-Inverse-Strong: #112849; --Dash-Text-Strong: #eaf2fc; --Dash-Text-Primary: #eaf2fc;
+    --Dash-Text-Weak: #93abcb; --Dash-Stroke-Strong: #33598f; --Dash-Stroke-Weak: #24477a;
+    --Dash-Fill-Disabled: #1b3864; --Dash-Tooltip-Background-Color: #eaf2fc; --Dash-Tooltip-Border-Color: #eaf2fc;
+    background: linear-gradient(180deg, #0f2a4d 0%, #0b2140 55%, #0a1b33 100%) !important;
+    color: var(--texto); border-color: #0a1b33 !important;
+}
+.panel .marca-logo {background: linear-gradient(135deg, #3d7fc4, #6db8e8);}
+.panel .grupo-ico {background: rgba(140, 192, 242, .16);}
+.panel .btn-primario {background: linear-gradient(135deg, #3d7fc4, #5fa8e6);}
+
+/* Pestañas: barra azul con la pestaña activa en blanco */
+.pestanas {
+    background: linear-gradient(90deg, rgba(18, 58, 107, .92), rgba(29, 95, 168, .88)) !important;
+    border-color: transparent !important; box-shadow: 0 10px 26px -14px rgba(10, 27, 51, .7);
+}
+.pestana {color: rgba(234, 242, 252, .82) !important;}
+.pestana--selected, .pestana-activa {background: #ffffff !important; color: var(--azul-700) !important;
+                                     box-shadow: 0 2px 8px rgba(10, 27, 51, .25) !important;}
+.tema-oscuro .pestana--selected, .tema-oscuro .pestana-activa {background: #e3ecf7 !important; color: #0f2a4d !important;}
+
+/* Tarjetas: franja superior de color con el icono en un chip */
+.tarjeta {border-color: var(--borde); overflow: hidden;}
+.tarjeta-cabecera {
+    margin: -16px -18px 12px; padding: 12px 18px 11px;
+    background: linear-gradient(90deg, rgba(29, 95, 168, .13), rgba(29, 95, 168, .02));
+    border-bottom: 1px solid var(--borde);
+}
+.tema-oscuro .tarjeta-cabecera {background: linear-gradient(90deg, rgba(109, 163, 217, .14), rgba(109, 163, 217, .02));}
+.tarjeta-ico, .kpi-ico {
+    display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 8px; margin-right: 9px;
+    background: var(--acento); color: #fff; font-size: 14px; flex: none;
+    box-shadow: 0 3px 8px -3px rgba(18, 58, 107, .6);
+}
+.tarjeta-ico .ico, .kpi-ico .ico {margin: 0 !important; color: #fff !important;}
+.tema-oscuro .tarjeta-ico, .tema-oscuro .kpi-ico {color: #0a1b33; background: var(--azul-300);}
+.tema-oscuro .tarjeta-ico .ico, .tema-oscuro .kpi-ico .ico {color: #0a1b33 !important;}
+
+/* KPIs teñidos por estado; el icono toma el color del estado */
+.kpi {padding-left: 16px;}
+.kpi::before {width: 4px;}
+.kpi-ico {width: 22px; height: 22px; border-radius: 7px; font-size: 12px; margin-right: 7px;}
+.kpi-info {background: linear-gradient(160deg, rgba(61, 127, 196, .13), var(--superficie) 65%);}
+.kpi-ok {background: linear-gradient(160deg, rgba(12, 163, 12, .12), var(--superficie) 65%);}
+.kpi-ok .kpi-ico {background: var(--estado-ok);}
+.kpi-warn {background: linear-gradient(160deg, rgba(250, 178, 25, .18), var(--superficie) 65%);}
+.kpi-warn .kpi-ico {background: #d99300;}
+.kpi-bad {background: linear-gradient(160deg, rgba(208, 59, 59, .14), var(--superficie) 65%);}
+.kpi-bad .kpi-ico {background: var(--estado-bad);}
+.tema-oscuro .kpi-ok .kpi-ico, .tema-oscuro .kpi-warn .kpi-ico, .tema-oscuro .kpi-bad .kpi-ico {color: #fff;}
+.tema-oscuro .kpi-ok .kpi-ico .ico, .tema-oscuro .kpi-warn .kpi-ico .ico, .tema-oscuro .kpi-bad .kpi-ico .ico {color: #fff !important;}
+.kpis {grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));}
+
+/* Avisos teñidos por estado */
+.aviso-ok {background: linear-gradient(90deg, rgba(12, 163, 12, .11), var(--superficie) 60%);}
+.aviso-warn {background: linear-gradient(90deg, rgba(250, 178, 25, .17), var(--superficie) 60%);}
+.aviso-bad {background: linear-gradient(90deg, rgba(208, 59, 59, .13), var(--superficie) 60%);}
+.aviso-info {background: linear-gradient(90deg, rgba(61, 127, 196, .14), var(--superficie) 60%);}
+.como-leer {background: linear-gradient(90deg, rgba(250, 178, 25, .10), var(--superficie) 45%);}
+
+@media (hover: hover) and (pointer: fine) {
+    .pestana:hover {background: rgba(255, 255, 255, .14) !important; color: #fff !important;}
+    .pestana-activa:hover, .pestana--selected:hover {background: #ffffff !important; color: var(--azul-700) !important;}
+    .subida:hover {background: rgba(61, 127, 196, .2); border-color: var(--acento);}
+}
+@media (prefers-reduced-transparency: reduce) {
+    .pestanas {background: var(--azul-700) !important;}
+}
+
+/* ---------- Pantallas medianas y pequeñas ---------- */
+@media (max-width: 1280px) {
+    .rejilla-principal, .rejilla-tres {grid-template-columns: minmax(0, 1fr);}
+    .rejilla-dos-uno, .rejilla-reales-datos {grid-template-columns: minmax(0, 1fr);}
+    .columna-semaforos {grid-template-columns: 1fr 1fr;}
+}
+@media (max-width: 980px) {
+    .app, .app.panel-izquierda {grid-template-columns: 1fr; grid-template-areas: "panel" "principal";}
+    .panel {position: static; height: auto; border: none; border-bottom: 1px solid var(--borde);}
+    .principal {padding: 16px;}
+    .rejilla-dos, .rejilla-cuatro, .rejilla-reales {grid-template-columns: minmax(0, 1fr);}
+    .cabecera h1 {font-size: 1.25rem;}
+}
+
+/* Etiquetas de KPI en tipo oración: más legibles y caben sin cortarse */
+.kpi-etiqueta {text-transform: none; letter-spacing: 0; font-size: .78rem; font-weight: 700; color: var(--texto-2);}
+.par-semaforos {display: grid; grid-template-columns: 1fr 1fr; gap: 6px;}
+.par-semaforos .luz {width: 30px; height: 30px;}
+.par-semaforos .semaforo-fisico {gap: 9px; padding: 12px 10px;}
+.par-titulo {font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; color: var(--tenue);}
